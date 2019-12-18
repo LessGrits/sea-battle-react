@@ -4,9 +4,12 @@ export default class Square extends Component {
 
 
 
-    render(){
-        return(
-            <img className={'img'} src={require(`./img/grid.png`)} alt=""/>
-        )
+    render() {
+        const {type/*, setDot*/} = this.props;
+
+        return (
+            <img  className={'img'} src={require(`../../img/${type}.png`)} alt=""/>)
     }
 }
+
+
