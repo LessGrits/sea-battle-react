@@ -1,0 +1,17 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+.field{
+    min-width: 350px;
+    border: 1px solid blue ;
+    padding: 0;
+    margin: 0;
+    max-width: 500px;
+
+}
+.img{
+    width: 10%;
+    margin-bottom: -10px;
+}
