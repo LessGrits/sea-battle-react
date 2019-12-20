@@ -6,16 +6,9 @@ import Square from "../square/square";
 export default class Field extends Component {
 
     state = {
-        grid: (() => {
-            let array = [];
-            for (let i = 0; i < 10; i++) {
-                array[i] = [];
-                for (let j = 0; j < 10; j++) {
-                    array[i][j] = {type: 'empty-square', key: i + '' + j};
-                }
-            }
-            return array
-        })()
+        grid: this.createMatrix()
+        ,
+        enemyGrid: this.createMatrix()
         ,
         ships: [
             {name: "fourDeck", deck: 4, num: 1},
@@ -25,8 +18,20 @@ export default class Field extends Component {
         ]
     };
 
-    setShipSquare(arrSip) {
-        let newGrid = [...this.state.grid];
+    createMatrix(){
+        let array = [];
+        for (let i = 0; i < 10; i++) {
+            array[i] = [];
+            for (let j = 0; j < 10; j++) {
+                array[i][j] = {type: 'empty-square', key: i + '' + j};
+            }
+        }
+        return array
+    }
+
+
+    setShipSquare(arrSip,tempGrid) {
+        let newGrid = [...tempGrid];
         for (let {cords} of arrSip) {
             for (let cord of cords) {
                 /*let oldSquare = this.state.grid[cord[0]][cord[1]];
@@ -39,16 +44,19 @@ export default class Field extends Component {
                     ],
                     ...newGrid.slice(cord[0] + 1),
                 ];*/
-                newGrid[cord[0]][cord[1]].type = 'grid-ship';
+                tempGrid === this.state.enemyGrid?newGrid[cord[0]][cord[1]].type = 'enemy-ship': newGrid[cord[0]][cord[1]].type = 'grid-ship';
             }
         }
 
 
         this.setState({
-            grid: newGrid
+            tempGrid: newGrid
         });
-    }
 
+    }
+    random() {
+        return Math.round(Math.random() * 9)
+    }
 
     createShip (decks, allShips) {
         let ship = {numDeck: decks, cords: [], shipField:[]};
@@ -59,9 +67,7 @@ export default class Field extends Component {
             {name: 'left', type: 'gor', change: -1},
             {name: 'right', type: 'gor', change: 1}];
 
-        function random() {
-            return Math.round(Math.random() * 9)
-        }
+
 
         let startCreating = () => {  //функція щоб перерендювати якщо всі 4 сторони злетіли
 
@@ -113,14 +119,14 @@ export default class Field extends Component {
 
             }
 
-            let i = random()
-                , j = random();
+            let i = this.random()
+                , j = this.random();
 
             let {cords, numDeck,shipField} = ship;
 
             while ( searchDuplicate([i,j])) {
-                i = random();
-                j = random();
+                i = this.random();
+                j = this.random();
             }
 
             cords.push([i, j]);
@@ -165,52 +171,63 @@ export default class Field extends Component {
                 allShips.push(this.createShip(type.deck,  allShips))
             }
         }
-
-        console.log((allShips.map(({shipField})=>shipField).reduce((prev,next) => prev.concat(next)).map(JSON.stringify)).includes('[0,0]'));
         return allShips;
     }
 
 
+    setDot = (key) => {
+        const {grid, enemyGrid} =this.state;
 
+        const [i,j] = key.split('');
+        const ei = this.random(), ej =this.random();
+        let enemyNewArr = [...enemyGrid];
+        let newArr = [...grid];
 
+        enemyNewArr[i][j].type =  enemyGrid[i][j].type === 'enemy-ship' ?  'grid-ship-x' : 'grid-dot';
+        newArr[ei][ej].type =  newArr[ei][ej].type === 'grid-ship'  ?  'grid-ship-x' :  'grid-dot';
 
-    setDot = (id) => {
-        this.setState(({grid}) => {
-            const newArray = [
-                ...grid.slice(0, id),
-                {type: 'grid-dot', id: id},
-                ...grid.slice(id + 1)
-            ];
-
-            return {
-                grid: newArray
-            }
-        })
+            this.setState({
+                enemyGrid: enemyNewArr,
+                grid: newArr
+            })
     };
 
     createImgField(array) {
         return array.map((arr) => {
             return arr.map(({type, key}) => {
-                return <Square type={type} key={key}/>
+                return <Square setDot={()=>this.setDot(key, array)} type={type} key={key}/>
             })
-        })
+        });
+
+
     }
 
 
     componentDidMount() {
-        this.setShipSquare(this.generateAllShip())
+        const {grid,enemyGrid} = this.state;
+        this.setShipSquare(this.generateAllShip(),grid);
+        this.setShipSquare(this.generateAllShip(),enemyGrid);
+    }
+
+    setResult(gridTemp,type){
+
     }
 
     render() {
-        const {grid} = this.state;
+        const {grid, enemyGrid} = this.state;
 
         const square = this.createImgField(grid);
+        const enemySquare = this.createImgField(enemyGrid);
 
-        console.log(grid);
 
         return (
-            <div className={'field'}>
-                {square}
+            <div className='field-container'>
+                <div className={'field'}>
+                    {square}
+                </div>
+                <div className={'field enemy'}>
+                    {enemySquare}
+                </div>
             </div>
         )
     }
